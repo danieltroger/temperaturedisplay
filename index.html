@@ -5,40 +5,63 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Ubuntu" />
   <script src="file_get_contents.js"></script>
   <script src="date.js"></script>
   <script>
-  // Sensor 28-01191a40cfa1, max: 25.375, min: -0.062, avg: 17.149377002106
+  // Sensor 28-01191a40cfa1, max: 25.375, min: 13, avg: 17.149377002106
   // Sensor 28-01191a4d5e9c, max: 30, min: -2.812, avg: 10.929771859633
   // Sensor 28-01191a63a353, max: 40.937, min: -3.187, avg: 13.473433876767
-  // Sensor 28-01191a0f798a, max: 49.937, min: -0.062, avg: 16.55057337912
-  // Sensor 28-01191a42fc0d, max: 18.562, min: -0.062, avg: 12.310828897381
-  var lastrefresh = (new Date).getTime(), stats = {"28-01191a40cfa1":{"max":25.375,"min":-0.062,"avg":17.14937700210626,"meandeviation":2.3378595598815823},"28-01191a4d5e9c":{"max":30,"min":-2.812,"avg":10.929771859632934,"meandeviation":5.630877773966346},"28-01191a63a353":{"max":40.937,"min":-3.187,"avg":13.47343387676724,"meandeviation":8.544573557794765},"28-01191a0f798a":{"max":49.937,"min":-0.062,"avg":16.550573379119534,"meandeviation":6.790369098755585},"28-01191a42fc0d":{"max":18.562,"min":-0.062,"avg":12.31082889738082,"meandeviation":2.4535261109166266}},
-  sensorNames = {'28-01191a4d5e9c':'Au&szlig;entemperatur','28-01191a63a353':'Innentemperatur Oben','28-01191a0f798a':'Innentemperatur Unten','28-01191a40cfa1':'Innentemperatur Erde','28-01191a42fc0d':'Außentemperatur Erde'};
+  // Sensor 28-01191a0f798a, max: 49.937, min: 4, avg: 16.55057337912
+  // Sensor 28-01191a42fc0d, max: 18.562, min: 7.5, avg: 12.310828897381
+  var lastrefresh = (new Date).getTime(), stats = {"28-01191a40cfa1":{"max":25.375,"min":13,"avg":17.14937700210626,"meandeviation":2.3378595598815823},
+  "28-01191a4d5e9c":{"max":30,"min":-2.812,"avg":10.929771859632934,"meandeviation":5.630877773966346},
+  "28-01191a63a353":{"max":40.937,"min":-3.187,"avg":13.47343387676724,"meandeviation":8.544573557794765},
+  "28-01191a0f798a":{"max":35,"min":4,"avg":16.550573379119534,"meandeviation":6.790369098755585},
+  "28-01191a42fc0d":{"max":18.562,"min":7.5,"avg":12.31082889738082,"meandeviation":2.4535261109166266}},
+  sensorNames = {'28-01191a4d5e9c':'Draussen',
+  '28-01191a63a353':'Decke innen',
+  '28-01191a0f798a':'Tomate',
+  '28-01191a40cfa1':'Erde innen',
+  '28-01191a42fc0d':'Erde au&szlig;en'};
   window.onload = function(){
     dontfreeze();
     refresh();
-    setTimeout("location.reload();",1000*60);
+    setTimeout("location.reload();",1000*60*60);
   }
   function refresh(){
     var data = JSON.parse(file_get_contents("/temp.txt?"+(new Date).getTime())),
     date = new Date(Date.fromISO(data.time)), i = 0;
     lastrefresh = date.getTime();
     $("date"). innerHTML = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds(),
-    sensorsInSensorNames = Object.keys(sensorNames);
+    sensorsInSensorNames = Object.keys(sensorNames),
+    bg = "-webkit-linear-gradient(";
     for(;i<sensorsInSensorNames.length;i++){
       var sensor = sensorsInSensorNames[i],
       value = data.sensors[sensor];
       $("sensor"+(i+1)).innerHTML = sensorNames[sensor]+": "+value+"&deg;C";
+      bg += color(sensor,value)+" "+(((1/6)*100*(i+1))+(((1/6)*100)/2))+"%, ";
     }
-    //for(;i<sensors.length;i++){
-    //  document.body.innerHTML += sensors[i] +": "+data.sensors[sensors[i]]+"&deg;C<br />";
-    //}
-    setTimeout(refresh,2000);
+    bg = bg.substr(0,bg.length-2);
+    $("container").style.backgroundImage = bg+")";
+    // setTimeout(refresh,2000);
+  }
+  function color(sensor,temperature){
+    // console.log(stats[sensor]);
+    var info = stats[sensor],
+    ourMin = info.min,
+    ourMax = info.max,
+    correctedValue = temperature-ourMin,
+    range = ourMax-ourMin,
+    percentage = (correctedValue/range)*100;
+    // console.log(ourMin,ourMax,temperature,correctedValue,percentage)
+    if(percentage < 0){return "rgb(0,0,255)";}
+    else if(percentage > 100){return "rgb(255,0,0)";}
+    return "hsl("+(100-percentage)*2.4+",100%,50%)";
   }
   function dontfreeze(){
     if((new Date).getTime()-lastrefresh > 149090){
-    location.reload();
+      location.reload();
     }
     setTimeout(dontfreeze,5000);
   }
@@ -49,8 +72,6 @@
   </script>
   <style>
   #container{
-    display: grid;
-    grid-template-columns: 1fr;
     position: absolute;
     top: 0;
     left: 0;
@@ -58,7 +79,9 @@
     right: 0;
     width: 100%;
     height: 100%;
-    magin: 0;
+    margin: 0;
+    overflow: hidden;
+    transition-duration: 2s;
   }
   body{
     font-family: ubuntu;
@@ -68,11 +91,21 @@
     color: white;
     background: black;
   }
-  span{
+  .row{
+    position: absolute;
+    height: 16.666666666667%;
+    width: 100%;
     /* display: block; */
+    /* border-bottom: 1px dashed grey; */
   }
   button {
     font-size: 15pt;
+  }
+  span{
+    top: 50%;
+    position: absolute;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
   }
   /* @keyframes bounce {
     0%   {top:0;left:0;}
@@ -90,12 +123,12 @@
 </head>
 <body>
   <div id="container">
-    <span id="date"></span>
-    <span id="sensor1"></span>
-    <span id="sensor2"></span>
-    <span id="sensor3"></span>
-    <span id="sensor4"></span>
-    <span id="sensor5"></span>
+    <div class="row" style="top:0;"><span id="date"></span></div>
+    <div class="row" style="top: 16.666666666667%;"><span id="sensor1"></span></div>
+    <div class="row" style="top: 33.333333333333%;"><span id="sensor2"></span></div>
+    <div class="row" style="top: 50%; color: red;"><span id="sensor3"></span></div>
+    <div class="row" style="top: 66.666666666667%;"><span id="sensor4"></span></div>
+    <div class="row" style="top: 83.333333333333%;"><span id="sensor5"></span></div>
   </div>
 </body>
 </html>

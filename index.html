@@ -8,18 +8,29 @@
   <script src="file_get_contents.js"></script>
   <script src="date.js"></script>
   <script>
-  var lastrefresh = (new Date).getTime();
+  // Sensor 28-01191a40cfa1, max: 25.375, min: -0.062, avg: 17.149377002106
+  // Sensor 28-01191a4d5e9c, max: 30, min: -2.812, avg: 10.929771859633
+  // Sensor 28-01191a63a353, max: 40.937, min: -3.187, avg: 13.473433876767
+  // Sensor 28-01191a0f798a, max: 49.937, min: -0.062, avg: 16.55057337912
+  // Sensor 28-01191a42fc0d, max: 18.562, min: -0.062, avg: 12.310828897381
+  var lastrefresh = (new Date).getTime(), stats = {"28-01191a40cfa1":{"max":25.375,"min":-0.062,"avg":17.14937700210626,"meandeviation":2.3378595598815823},"28-01191a4d5e9c":{"max":30,"min":-2.812,"avg":10.929771859632934,"meandeviation":5.630877773966346},"28-01191a63a353":{"max":40.937,"min":-3.187,"avg":13.47343387676724,"meandeviation":8.544573557794765},"28-01191a0f798a":{"max":49.937,"min":-0.062,"avg":16.550573379119534,"meandeviation":6.790369098755585},"28-01191a42fc0d":{"max":18.562,"min":-0.062,"avg":12.31082889738082,"meandeviation":2.4535261109166266}},
+  sensorNames = {'28-01191a4d5e9c':'Au&szlig;entemperatur','28-01191a63a353':'Innentemperatur Oben','28-01191a0f798a':'Innentemperatur Unten','28-01191a40cfa1':'Innentemperatur Erde','28-01191a42fc0d':'Außentemperatur Erde'};
   window.onload = function(){
     dontfreeze();
     refresh();
-    setTimeout("location.reload();",1000*60*60);
+    setTimeout("location.reload();",1000*60);
   }
   function refresh(){
     var data = JSON.parse(file_get_contents("/temp.txt?"+(new Date).getTime())),
-    date = new Date(Date.fromISO(data.time)),
-    sensors = Object.keys(data.sensors);//, i = 0;
+    date = new Date(Date.fromISO(data.time)), i = 0;
     lastrefresh = date.getTime();
-    document.getElementById("text").innerHTML = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds()+"<br />Au&szlig;entemperatur: "+data.sensors['28-01191a4d5e9c']+"&deg;C<br />Innentemperatur Oben: "+data.sensors['28-01191a63a353']+"&deg;C<br />Innentemperatur Unten: "+data.sensors['28-01191a0f798a']+"&deg;C<br />Innentemperatur Erde: "+data.sensors['28-01191a40cfa1']+"&deg;C<br />Außentemperatur Erde: "+data.sensors['28-01191a42fc0d']+"&deg;";
+    $("date"). innerHTML = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds(),
+    sensorsInSensorNames = Object.keys(sensorNames);
+    for(;i<sensorsInSensorNames.length;i++){
+      var sensor = sensorsInSensorNames[i],
+      value = data.sensors[sensor];
+      $("sensor"+(i+1)).innerHTML = sensorNames[sensor]+": "+value+"&deg;C";
+    }
     //for(;i<sensors.length;i++){
     //  document.body.innerHTML += sensors[i] +": "+data.sensors[sensors[i]]+"&deg;C<br />";
     //}
@@ -31,9 +42,24 @@
     }
     setTimeout(dontfreeze,5000);
   }
+  function $(x){
+    return document.getElementById(x);
+  }
   //window.ontouchstart=function(){document.body.webkitRequestFullScreen();document.body.webkitRequestFullscreen();}
   </script>
   <style>
+  #container{
+    display: grid;
+    grid-template-columns: 1fr;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    magin: 0;
+  }
   body{
     font-family: ubuntu;
     font-size: 50pt;
@@ -42,24 +68,34 @@
     color: white;
     background: black;
   }
+  span{
+    /* display: block; */
+  }
   button {
     font-size: 15pt;
   }
-  @keyframes bounce {
+  /* @keyframes bounce {
     0%   {top:0;left:0;}
     50%  {top:20%;left:0;/*transform: translate(-90%,-90%);-webkit-transform: translate(-90%,-90%);*/}
     100% {top:0;left:0;}
-  }
-  #text{
+  } */
+  /* #text{
     position: absolute;
     animation-name: bounce;
     animation-duration: 60s;
     animation-iteration-count: infinite;
     animation-delay: 240s;
-  }
+  } */
   </style>
 </head>
 <body>
-<div id="text"></div>
+  <div id="container">
+    <span id="date"></span>
+    <span id="sensor1"></span>
+    <span id="sensor2"></span>
+    <span id="sensor3"></span>
+    <span id="sensor4"></span>
+    <span id="sensor5"></span>
+  </div>
 </body>
 </html>

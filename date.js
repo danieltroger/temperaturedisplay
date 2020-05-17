@@ -1,4 +1,4 @@
-Date.fromISO= (function(){
+Date.fromISO= (function(){ // I stole this from somwhere, sorry. Don't know from where though
     var testIso = '2011-11-24T09:00:27+0200';
     // Chrome
     var diso= Date.parse(testIso);
@@ -11,21 +11,21 @@ Date.fromISO= (function(){
         return parseInt(itm, 10) || 0;
       });
       day[1]-= 1;
-      day= new Date(Date.UTC.apply(Date, day));  
+      day= new Date(Date.UTC.apply(Date, day));
       var offsetString = s.slice(-5)
-      var offset = parseInt(offsetString,10)/100; 
+      var offset = parseInt(offsetString,10)/100;
       if (offsetString.slice(0,1)=="+") offset*=-1;
       day.setHours(day.getHours()+offset);
       return day.getTime();
     }
     if (noOffset(testIso)===1322118027000) {
        return noOffset;
-    }  
+    }
     return function(s){ // kennebec@SO + QTax@SO
-        var day, tz, 
+        var day, tz,
 //        rx = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d{4}))?$/,
         rx = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):?(\d\d))?$/,
-            
+
         p= rx.exec(s) || [];
         if(p[1]){
             day= p[1].split(/\D/).map(function(itm){
@@ -45,4 +45,3 @@ Date.fromISO= (function(){
         return NaN;
     }
 })()
-

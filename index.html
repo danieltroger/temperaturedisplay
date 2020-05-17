@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta charset="utf-8"/>
+  <script src="file_get_contents.js"></script>
+  <script src="date.js"></script>
+  <script>
+  var lastrefresh = (new Date).getTime();
+  window.onload = function(){
+    dontfreeze();
+    refresh();
+    setTimeout("location.reload();",1000*60*60);
+  }
+  function refresh(){
+    var data = JSON.parse(file_get_contents("/temp.txt?"+(new Date).getTime())),
+    date = new Date(Date.fromISO(data.time)),
+    sensors = Object.keys(data.sensors);//, i = 0;
+    lastrefresh = date.getTime();
+    document.getElementById("text").innerHTML = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds()+"<br />Au&szlig;entemperatur: "+data.sensors['28-01191a4d5e9c']+"&deg;C<br />Innentemperatur Oben: "+data.sensors['28-01191a63a353']+"&deg;C<br />Innentemperatur Unten: "+data.sensors['28-01191a0f798a']+"&deg;C<br />Innentemperatur Erde: "+data.sensors['28-01191a40cfa1']+"&deg;C<br />Außentemperatur Erde: "+data.sensors['28-01191a42fc0d']+"&deg;";
+    //for(;i<sensors.length;i++){
+    //  document.body.innerHTML += sensors[i] +": "+data.sensors[sensors[i]]+"&deg;C<br />";
+    //}
+    setTimeout(refresh,2000);
+  }
+  function dontfreeze(){
+    if((new Date).getTime()-lastrefresh > 149090){
+    location.reload();
+    }
+    setTimeout(dontfreeze,5000);
+  }
+  //window.ontouchstart=function(){document.body.webkitRequestFullScreen();document.body.webkitRequestFullscreen();}
+  </script>
+  <style>
+  body{
+    font-family: ubuntu;
+    font-size: 50pt;
+    user-select: none;
+    -webkit-user-select: none;
+    color: white;
+    background: black;
+  }
+  button {
+    font-size: 15pt;
+  }
+  @keyframes bounce {
+    0%   {top:0;left:0;}
+    50%  {top:20%;left:0;/*transform: translate(-90%,-90%);-webkit-transform: translate(-90%,-90%);*/}
+    100% {top:0;left:0;}
+  }
+  #text{
+    position: absolute;
+    animation-name: bounce;
+    animation-duration: 60s;
+    animation-iteration-count: infinite;
+    animation-delay: 240s;
+  }
+  </style>
+</head>
+<body>
+<div id="text"></div>
+</body>
+</html>
